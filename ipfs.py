@@ -1,9 +1,9 @@
 import requests
 import json
 
-# Pinata API Key and Secret
-API_KEY = "你的API Key"
-API_SECRET = "你的API Secret"
+# 你的 Pinata API 密钥和密钥
+API_KEY = "442e4f52649c261647e2"
+API_SECRET = "fcd2883dbeee1221924a4097186802dbb457f4950353933f4a537b658e35718a"
 
 def pin_to_ipfs(data):
     """
@@ -12,18 +12,20 @@ def pin_to_ipfs(data):
     """
     assert isinstance(data, dict), "Error: pin_to_ipfs expects a dictionary"
     
-    # URL for the Pinata API to pin JSON to IPFS
+    # Pinata API URL
     url = "https://api.pinata.cloud/pinning/pinJSONToIPFS"
     
     headers = {
         "pinata_api_key": API_KEY,
-        "pinata_secret_api_key": API_SECRET
+        "pinata_secret_api_key": API_SECRET,
+        "Content-Type": "application/json"
     }
 
     try:
-        # Send the POST request to Pinata API to add the file
-        response = requests.post(url, json=data, headers=headers)
-        response.raise_for_status()  # Raise an error for bad status codes
+        # Convert the data to JSON
+        json_data = json.dumps(data)
+        response = requests.post(url, data=json_data, headers=headers)
+        response.raise_for_status()  # 如果响应状态码不是200，抛出异常
         
         response_json = response.json()
         cid = response_json.get('IpfsHash')
@@ -31,7 +33,7 @@ def pin_to_ipfs(data):
         if not cid:
             raise Exception("Failed to obtain CID from Pinata response.")
         
-        return str(cid)  # Ensure CID is returned as a string
+        return str(cid)  # 确保CID是字符串格式返回
     except requests.exceptions.RequestException as e:
         raise Exception("Failed to pin data to IPFS via Pinata: {}".format(e))
 
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     }
     
     try:
-        # Pin data to IPFS
+        # Pin data to IPFS using Pinata
         cid = pin_to_ipfs(data_to_pin)
         print("Data successfully pinned to IPFS with CID: {}".format(cid))
     except Exception as e:
@@ -136,5 +138,6 @@ if __name__ == "__main__":
             print(e)
     else:
         print("Error: The CID is not in a string format.")
+
 
 
