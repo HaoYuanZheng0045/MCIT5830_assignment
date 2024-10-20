@@ -15,23 +15,20 @@ def pin_to_ipfs(data):
     # Convert the data to JSON and prepare it for upload
     json_data = json.dumps(data)
     files = {
-        'file': ('data.json', json_data, 'application/json')  # 添加MIME类型
+        'file': ('data.json', json_data)
     }
     
-    try:
-        # Send the POST request to the IPFS API to add the file
-        response = requests.post(url, files=files)
-        response.raise_for_status()  # 如果响应状态码不是 200，抛出异常
-        
+    # Send the POST request to the IPFS API to add the file
+    response = requests.post(url, files=files)
+    
+    # Check if the request was successful
+    if response.status_code == 200:
         response_json = response.json()
-        cid = response_json.get('Hash')
-        
-        if not cid:
-            raise Exception("Failed to obtain CID from IPFS response.")
-        
-        return str(cid)  # Ensure CID is returned as a string
-    except requests.exceptions.RequestException as e:
-        raise Exception("Failed to pin data to IPFS: {}".format(e))
+        cid = response_json['Hash']
+    else:
+        raise Exception("Failed to pin data to IPFS: {}".format(response.text))
+    
+    return str(cid)  # Ensure CID is returned as a string
 
 def get_from_ipfs(cid, content_type="json"):
     """
@@ -40,32 +37,25 @@ def get_from_ipfs(cid, content_type="json"):
     """
     assert isinstance(cid, str), "get_from_ipfs expects a CID in the form of a string"
     
-    # Try using different gateways
-    gateways = [
-        f"https://cloudflare-ipfs.com/ipfs/{cid}",
-        f"https://ipfs.io/ipfs/{cid}",
-        f"https://gateway.pinata.cloud/ipfs/{cid}"
-    ]
+    # URL for retrieving the data from the IPFS gateway
+    gateway_url = "http://localhost:8080/ipfs/{}".format(cid)
     
-    for gateway_url in gateways:
-        try:
-            response = requests.get(gateway_url)
-            response.raise_for_status()  # If status code is not 200, raise an exception
-            
-            if content_type == "json":
-                try:
-                    data = response.json()
-                    assert isinstance(data, dict), "get_from_ipfs should return a dictionary when content_type is 'json'"
-                except json.JSONDecodeError:
-                    raise Exception("The content retrieved is not valid JSON.")
-            else:
-                data = response.content
-            
-            return data
-        except requests.exceptions.RequestException as e:
-            print(f"Failed to retrieve data from {gateway_url}: {e}")
+    # Send GET request to fetch the file from IPFS
+    response = requests.get(gateway_url)
     
-    raise Exception("Failed to retrieve data from any IPFS gateway")
+    # Check if the request was successful
+    if response.status_code == 200:
+        if content_type == "json":
+            data = response.json()
+        else:
+            data = response.content
+    else:
+        raise Exception("Failed to retrieve data from IPFS: {}".format(response.text))
+    
+    if content_type == "json":
+        assert isinstance(data, dict), "get_from_ipfs should return a dictionary"
+    
+    return data
 
 if __name__ == "__main__":
     # Data to be pinned to IPFS
