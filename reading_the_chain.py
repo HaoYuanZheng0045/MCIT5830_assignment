@@ -7,14 +7,16 @@ from web3.providers.rpc import HTTPProvider
 INFURA_API_KEY = "4eea275f633744c2a75821eb1fbc6194"
 INFURA_URL = f"https://mainnet.infura.io/v3/{INFURA_API_KEY}"
 
-def connect_to_eth():
-    w3 = Web3(HTTPProvider(INFURA_URL))
+def connect_to_bnb():
+    BNB_TESTNET_URL = "https://data-seed-prebsc-1-s1.binance.org:8545/"
+    w3 = Web3(HTTPProvider(BNB_TESTNET_URL))
     try:
-        # 尝试获取最新区块号来确认连接
+        # 测试连接是否成功
         w3.eth.block_number
     except Exception as e:
-        raise Exception("Failed to connect to Ethereum node. Please check your API URL and network connection.") from e
+        raise Exception("Failed to connect to BNB testnet. Please check the network URL and connection.") from e
     return w3
+
 
 def connect_with_middleware(contract_json):
     w3 = connect_to_eth()
