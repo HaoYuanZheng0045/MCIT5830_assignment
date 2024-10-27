@@ -19,7 +19,8 @@ def connect_to_bnb():
 
 
 def connect_with_middleware(contract_json):
-    w3 = connect_to_eth()
+    # 修改这里为连接到 BNB 测试网
+    w3 = connect_to_bnb()
     # Inject Geth POA middleware for networks like BNB Testnet
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -34,6 +35,7 @@ def connect_with_middleware(contract_json):
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     return w3, contract
+
 
 
 
