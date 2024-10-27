@@ -7,20 +7,17 @@ from web3.providers.rpc import HTTPProvider
 INFURA_API_KEY = "4eea275f633744c2a75821eb1fbc6194"
 INFURA_URL = f"https://mainnet.infura.io/v3/{INFURA_API_KEY}"
 
-def connect_to_bnb():
-    BNB_TESTNET_URL = "https://data-seed-prebsc-1-s1.binance.org:8545/"
-    w3 = Web3(HTTPProvider(BNB_TESTNET_URL))
+def connect_to_eth():
+    w3 = Web3(HTTPProvider(INFURA_URL))
     try:
-        # 测试连接是否成功
+        # 尝试获取最新区块号来确认连接
         w3.eth.block_number
     except Exception as e:
-        raise Exception("Failed to connect to BNB testnet. Please check the network URL and connection.") from e
+        raise Exception("Failed to connect to Ethereum node. Please check your API URL and network connection.") from e
     return w3
 
-
 def connect_with_middleware(contract_json):
-    # 修改这里为连接到 BNB 测试网
-    w3 = connect_to_bnb()
+    w3 = connect_to_eth()
     # Inject Geth POA middleware for networks like BNB Testnet
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -35,8 +32,6 @@ def connect_with_middleware(contract_json):
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     return w3, contract
-
-
 
 
 def is_ordered_block(w3, block_num):
@@ -136,4 +131,5 @@ if __name__ == "__main__":
             print(f"Block {block_num} is ordered")
         else:
             print(f"Block {block_num} is not ordered")
+
 
