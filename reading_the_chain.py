@@ -25,12 +25,14 @@ def connect_with_middleware(contract_json):
     with open(contract_json, "r") as f:
         contract_data = json.load(f)
 
-    contract_address = Web3.toChecksumAddress(contract_data["address"])
+    # 修改这里的 toChecksumAddress 为 to_checksum_address
+    contract_address = w3.to_checksum_address(contract_data["address"])
     contract_abi = contract_data["abi"]
 
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     return w3, contract
+
 
 def is_ordered_block(w3, block_num):
     """
