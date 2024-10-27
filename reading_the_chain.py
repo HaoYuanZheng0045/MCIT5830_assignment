@@ -8,14 +8,15 @@ INFURA_API_KEY = "4eea275f633744c2a75821eb1fbc6194"
 INFURA_URL = f"https://mainnet.infura.io/v3/{INFURA_API_KEY}"
 
 def connect_to_eth():
-    # TODO insert your code for this method from last week's assignment
     w3 = Web3(HTTPProvider(INFURA_URL))
-    if not w3.isConnected():
-        raise Exception("Failed to connect to Ethereum node. Please check your API URL and network connection.")
+    try:
+        # 尝试获取最新区块号来确认连接
+        w3.eth.block_number
+    except Exception as e:
+        raise Exception("Failed to connect to Ethereum node. Please check your API URL and network connection.") from e
     return w3
 
 def connect_with_middleware(contract_json):
-    # TODO insert your code for this method from last week's assignment
     w3 = connect_to_eth()
     # Inject Geth POA middleware for networks like BNB Testnet
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
