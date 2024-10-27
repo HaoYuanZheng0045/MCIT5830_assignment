@@ -9,7 +9,8 @@ INFURA_URL = f"https://mainnet.infura.io/v3/f6a0ee81e7ec415ca7891993229af4b5"
 
 # Bored Ape 合约地址
 bayc_address = "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D"
-contract_address = Web3.toChecksumAddress(bayc_address)
+contract_address = Web3.to_checksum_address(bayc_address)
+
 
 # 获取合约 ABI
 ABI_ENDPOINT = 'https://api.etherscan.io/api?module=contract&action=getabi&address='
