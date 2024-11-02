@@ -1,15 +1,11 @@
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
-
-print("Middleware imported successfully!")
-from web3 import Web3
 from eth_account.messages import encode_defunct
 import random
-from web3 import Web3
-from eth_account import Account
 
 # 连接到网络
 w3 = Web3(Web3.HTTPProvider("https://api.avax-test.network/ext/bc/C/rpc"))
+w3.middleware_stack.inject(geth_poa_middleware, layer=0)
 
 # 创建或导入账户
 private_key = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"
@@ -675,49 +671,37 @@ contract_abi = [
     "stateMutability": "nonpayable",
     "type": "function"
   }
-]  # 你的合约 ABI
+] # 填入你的合约 ABI
 
 # 连接合约
 contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-# 铸造 NFT
+# 铸造 NFT（替换为正确的参数）
 nonce = w3.eth.get_transaction_count(account.address)
-txn = contract.functions.claim(...).buildTransaction({
+txn = contract.functions.claim(account.address, random.randbytes(32)).buildTransaction({  # 根据合约要求替换参数
     'from': account.address,
     'nonce': nonce,
     'gas': 200000,
     'gasPrice': w3.toWei('50', 'gwei')
 })
 
-# 签名并发送交易
-signed_txn = w3.eth.account.sign_transaction(txn, private_key)
-txn_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-
-print(f"Transaction sent with hash: {txn_hash.hex()}")
-
-# 实例化 Web3
-w3 = Web3()
+try:
+    # 签名并发送交易
+    signed_txn = w3.eth.account.sign_transaction(txn, private_key)
+    txn_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    print(f"Transaction sent with hash: {txn_hash.hex()}")
+except Exception as e:
+    print(f"An error occurred: {e}")
 
 def signChallenge(challenge):
-    # 使用实际的私钥替换
-    sk = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"  # 确保用正确的私钥填充此处
-
-    acct = w3.eth.account.from_key(sk)
-
-    # 签署挑战消息
+    acct = w3.eth.account.from_key(private_key)
     signed_message = acct.sign_message(challenge)
-
     return acct.address, signed_message.signature
 
 def verifySig():
-    """
-    测试 signChallenge 函数的代码
-    """
     challenge_bytes = random.randbytes(32)
     challenge = encode_defunct(challenge_bytes)
     address, sig = signChallenge(challenge)
-
-    # 验证签名是否正确
     return w3.eth.account.recover_message(challenge, signature=sig) == address
 
 if __name__ == '__main__':
@@ -725,3 +709,4 @@ if __name__ == '__main__':
         print("You passed the challenge!")
     else:
         print("You failed the challenge!")
+
