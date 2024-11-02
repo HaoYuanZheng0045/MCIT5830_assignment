@@ -19,3 +19,6 @@ def sign(m):
     assert isinstance(signed_message, eth_account.datastructures.SignedMessage)
 
     return eth_address, signed_message
+eth_address, signed_message = sign("Hello, Ethereum!")
+print("Ethereum Address:", eth_address)
+print("Signature:", signed_message)
