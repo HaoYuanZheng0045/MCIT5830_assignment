@@ -1,17 +1,7 @@
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
 
-# 连接到 Avalanche Fuji 测试网
-w3 = Web3(Web3.HTTPProvider("https://api.avax-test.network/ext/bc/C/rpc"))
-
-# 注入 POA 中间件
-w3.middleware_stack.inject(geth_poa_middleware, layer=0)
-
-# 测试连接是否成功
-if w3.isConnected():
-    print("Connected to Avalanche Fuji Testnet!")
-else:
-    print("Failed to connect.")
+print("Middleware imported successfully!")
 from web3 import Web3
 from eth_account.messages import encode_defunct
 import random
