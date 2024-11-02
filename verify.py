@@ -2,6 +2,7 @@ from web3 import Web3
 from web3.middleware import geth_poa_middleware
 from eth_account.messages import encode_defunct
 import random
+import os
 
 # 连接到 Avalanche Fuji 测试网
 w3 = Web3(Web3.HTTPProvider("https://api.avax-test.network/ext/bc/C/rpc"))
