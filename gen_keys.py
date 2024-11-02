@@ -37,6 +37,9 @@ def get_keys(challenge, keyId=0, filename="eth_mnemonic.txt"):
     acct = eth_account.Account.from_key(private_key)
     eth_addr = acct.address
 
+    # 输出账户地址
+    print("您的账户地址是:", eth_addr)
+
     # 对消息进行签名
     sig = acct.sign_message(msg)
 
@@ -50,4 +53,5 @@ if __name__ == "__main__":
     for i in range(4):
         challenge = os.urandom(64)
         sig, addr = get_keys(challenge=challenge, keyId=i)
-        print(addr)
+        print("生成的地址:", addr)
+
