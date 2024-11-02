@@ -7,7 +7,7 @@ def generate_new_account():
     w3 = Web3()
     new_account = w3.eth.account.create()
     print("生成的地址:", new_account.address)
-    print("生成的私钥:", new_account.privateKey.hex())
+    print("生成的私钥:", new_account.private_key.hex())  # 使用 private_key 而非 privateKey
     return new_account
 
 def signChallenge(challenge):
@@ -46,3 +46,4 @@ if __name__ == '__main__':
         print("You passed the challenge!")
     else:
         print("You failed the challenge!")
+
