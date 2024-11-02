@@ -1,42 +1,50 @@
 from web3 import Web3
 from eth_account.messages import encode_defunct
 import random
+import json
 
-def signChallenge( challenge ):
-
+def generate_new_account():
     w3 = Web3()
+    new_account = w3.eth.account.create()
+    print("生成的地址:", new_account.address)
+    print("生成的私钥:", new_account.privateKey.hex())
+    return new_account
 
-    #This is the only line you need to modify
-    sk = "YOUR SECRET KEY HERE"
+def signChallenge(challenge):
+    # Web3连接到Avalanche Fuji测试网
+    w3 = Web3(Web3.HTTPProvider('https://api.avax-test.network/ext/bc/C/rpc'))
 
-    acct = w3.eth.account.from_key(sk)
+    # 生成新的账户和私钥
+    acct = generate_new_account()
 
-    signed_message = w3.eth.account.sign_message( challenge, private_key = acct._private_key )
+    # 对挑战字符串进行签名
+    signed_message = w3.eth.account.sign_message(challenge, private_key=acct._private_key)
 
     return acct.address, signed_message.signature
 
-
 def verifySig():
     """
-        This is essentially the code that the autograder will use to test signChallenge
-        We've added it here for testing 
+    这是autograder将用来测试signChallenge的代码
     """
 
+    # 随机生成32字节的挑战字符串
     challenge_bytes = random.randbytes(32)
-
     challenge = encode_defunct(challenge_bytes)
-    address, sig = signChallenge( challenge )
 
-    w3 = Web3()
+    # 获取地址和签名
+    address, sig = signChallenge(challenge)
 
-    return w3.eth.account.recover_message( challenge , signature=sig ) == address
+    # 验证签名是否正确
+    w3 = Web3(Web3.HTTPProvider('https://api.avax-test.network/ext/bc/C/rpc'))
+    return w3.eth.account.recover_message(challenge, signature=sig) == address
 
 if __name__ == '__main__':
     """
-        Test your function
+    测试函数
     """
     if verifySig():
-        print( f"You passed the challenge!" )
+        print("You passed the challenge!")
     else:
-        print( f"You failed the challenge!" )
+        print("You failed the challenge!")
+
 
