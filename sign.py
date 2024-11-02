@@ -22,3 +22,11 @@ def sign(m):
 eth_address, signed_message = sign("Hello, Ethereum!")
 print("Ethereum Address:", eth_address)
 print("Signature:", signed_message)
+from eth_account import Account
+
+account = Account.create()
+private_key = account.key.hex()
+address = account.address
+
+print("Private Key:", private_key)
+print("Address:", address)
