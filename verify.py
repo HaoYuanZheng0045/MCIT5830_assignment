@@ -8,7 +8,7 @@ w3 = Web3(Web3.HTTPProvider("https://api.avax-test.network/ext/bc/C/rpc"))
 w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 # 加载ABI文件
-with open("/mnt/data/NFT (1).abi") as f:  # 请确认文件路径是否正确
+with open("/mnt/data/NFT .abi") as f:  # 请确认文件路径是否正确
     abi = json.load(f)
 
 # 合约地址
