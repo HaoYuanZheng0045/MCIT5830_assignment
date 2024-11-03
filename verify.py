@@ -1,46 +1,39 @@
 from web3 import Web3
-from eth_account.messages import encode_defunct
-import random
+from web3.middleware import geth_poa_middleware
 from eth_account import Account
+import json
 
-def signChallenge(challenge):
-    # 使用提供的私钥
-    sk = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"
-    acct = Account.from_key(sk)
-    
-    # 将挑战消息编码成适合签名的格式
-    if isinstance(challenge, bytes):  # 如果challenge是字节格式
-        challenge_message = encode_defunct(challenge)
-    else:
-        challenge_message = encode_defunct(text=challenge)
-    
-    # 使用账户签名消息
-    signed_message = acct.sign_message(challenge_message)
-    
-    # 返回签名
-    return signed_message.signature
+# 连接到Avalanche Fuji测试网
+w3 = Web3(Web3.HTTPProvider("https://api.avax-test.network/ext/bc/C/rpc"))
+w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-def verifySig():
-    """
-    自动评分器将用于测试 signChallenge 的代码
-    """
-    # 生成32字节的随机挑战
-    challenge_bytes = random.randbytes(32)
-    
-    # 调用 signChallenge 来获取签名
-    sig = signChallenge(challenge_bytes)
-    
-    # 使用私钥生成账户地址，并验证签名
-    account = Account.from_key("0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf")
-    challenge_message = encode_defunct(challenge_bytes)
-    return Web3().eth.account.recover_message(challenge_message, signature=sig) == account.address
+# 加载ABI文件
+with open("/mnt/data/NFT (1).abi") as f:  # 请确认文件路径是否正确
+    abi = json.load(f)
 
-if __name__ == '__main__':
-    # 测试你的函数
-    if verifySig():
-        print("You passed the challenge!")
-    else:
-        print("You failed the challenge!")
+# 合约地址
+contract_address = "0x85ac2e065d4526FBe6a225338969a12318A412"  # 根据你提供的信息填写正确的合约地址
+contract = w3.eth.contract(address=contract_address, abi=abi)
+
+# 使用私钥创建账户
+private_key = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"
+account = Account.from_key(private_key)
+
+# 定义领取NFT的交易
+nonce = 1  # 选择一个nonce值，确保tokenId唯一
+tx = contract.functions.claim(nonce).buildTransaction({
+    'from': account.address,
+    'nonce': w3.eth.get_transaction_count(account.address),
+    'gas': 2000000,
+    'gasPrice': w3.toWei('5', 'gwei')
+})
+
+# 签署并发送交易
+signed_tx = w3.eth.account.sign_transaction(tx, private_key)
+tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+print("交易已发送，等待回执...")
+tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+print("交易回执:", tx_receipt)
 
 
 
