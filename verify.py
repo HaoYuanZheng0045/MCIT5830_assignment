@@ -1,6 +1,6 @@
 from web3 import Web3
 from eth_account.messages import encode_defunct
-import os
+import random
 from eth_account import Account
 
 def signChallenge(challenge):
@@ -10,10 +10,10 @@ def signChallenge(challenge):
 
     # 确保 challenge 是字节格式
     if not isinstance(challenge, bytes):
-        challenge = bytes(challenge, 'utf-8')
+        challenge = bytes(str(challenge), 'utf-8')
 
-    # 使用 encode_defunct 对 challenge 编码并签名
-    message = encode_defunct(text=challenge.decode())
+    # 编码消息并签名
+    message = encode_defunct(text=challenge.decode('utf-8'))
     signed_message = acct.sign_message(message)
 
     # 返回地址和签名
@@ -24,10 +24,10 @@ def verifySig():
     自动评分器将用于测试 signChallenge 的代码
     """
     # 生成32字节的随机挑战
-    challenge_bytes = os.urandom(32)
+    challenge_bytes = random.randbytes(32)
     
     # 使用 signChallenge 函数签名消息
-    address, sig = signChallenge(challenge_bytes.decode('utf-8'))
+    address, sig = signChallenge(challenge_bytes)
 
     # 验证签名是否正确
     w3 = Web3()
