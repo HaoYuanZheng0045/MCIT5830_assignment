@@ -39,6 +39,7 @@ def get_keys(challenge, keyId=0, filename="eth_mnemonic.txt"):
 
     # 输出账户地址
     print("您的账户地址是:", eth_addr)
+    print(f"生成的私钥为: {private_key}")
 
     # 对消息进行签名
     sig = acct.sign_message(msg)
