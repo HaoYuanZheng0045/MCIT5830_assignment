@@ -29,8 +29,9 @@ tx = contract.functions.claim(user_address, nonce).buildTransaction({
     'from': account.address,
     'nonce': w3.eth.get_transaction_count(account.address),
     'gas': 2000000,
-    'gasPrice': w3.toWei('5', 'gwei')
+    'gasPrice': w3.toWei('30', 'gwei')  # 提高 gasPrice 至 30 Gwei
 })
+
 
 # 签署并发送交易
 signed_tx = w3.eth.account.sign_transaction(tx, private_key)
