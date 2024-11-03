@@ -12,8 +12,8 @@ def signChallenge(challenge):
     if not isinstance(challenge, bytes):
         challenge = bytes(str(challenge), 'utf-8')
 
-    # 编码消息并签名
-    message = encode_defunct(text=challenge.decode('utf-8'))
+    # 直接使用 challenge 编码并签名
+    message = encode_defunct(challenge)
     signed_message = acct.sign_message(message)
 
     # 返回地址和签名
@@ -31,7 +31,7 @@ def verifySig():
 
     # 验证签名是否正确
     w3 = Web3()
-    message = encode_defunct(text=challenge_bytes.decode('utf-8'))
+    message = encode_defunct(challenge_bytes)
     return w3.eth.account.recover_message(message, signature=sig) == address
 
 if __name__ == '__main__':
