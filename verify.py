@@ -12,7 +12,7 @@ def signChallenge(challenge):
     message = encode_defunct(text=challenge)
     signed_message = acct.sign_message(message)
     
-    # 返回签名对象
+    # 返回签名
     return signed_message.signature
 
 def verifySig():
@@ -22,13 +22,13 @@ def verifySig():
     # 生成随机挑战字节串
     challenge_bytes = random.randbytes(32)
     
-    # 将挑战编码成适合签名的格式
+    # 将挑战字节串编码成适合签名的格式
     challenge = encode_defunct(challenge_bytes)
     sig = signChallenge(challenge_bytes)
     
-    # 重新生成地址并验证签名
-    address = Account.from_key("YOUR_SECRET_KEY_HERE").address
-    return w3.eth.account.recover_message(challenge, signature=sig) == address
+    # 生成账户地址并验证签名
+    account = Account.from_key("0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf")
+    return Web3().eth.account.recover_message(challenge, signature=sig) == account.address
 
 if __name__ == '__main__':
     # 测试你的函数
@@ -36,5 +36,6 @@ if __name__ == '__main__':
         print("You passed the challenge!")
     else:
         print("You failed the challenge!")
+
 
 
