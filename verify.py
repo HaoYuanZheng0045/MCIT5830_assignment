@@ -10,9 +10,9 @@ def signChallenge(challenge):
 
     # 确保 challenge 是字节类型
     if not isinstance(challenge, bytes):
-        challenge = bytes(str(challenge), 'utf-8')
+        challenge = bytes(challenge)
 
-    # 直接使用 challenge 编码并签名
+    # 使用 encode_defunct 对 challenge 编码并签名
     message = encode_defunct(challenge)
     signed_message = acct.sign_message(message)
 
@@ -40,6 +40,7 @@ if __name__ == '__main__':
         print("You passed the challenge!")
     else:
         print("You failed the challenge!")
+
 
 
 
