@@ -8,11 +8,11 @@ def signChallenge(challenge):
     sk = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"  # 替换为您的私钥
     acct = Account.from_key(sk)
 
-    # 确保 challenge 是字节类型
+    # 如果 challenge 不是字节类型，则转换为字节
     if not isinstance(challenge, bytes):
-        challenge = bytes(str(challenge), 'utf-8')
+        challenge = bytes(challenge, 'utf-8')
 
-    # 使用原始字节创建消息
+    # 使用 challenge 直接创建消息
     message = encode_defunct(challenge)
     signed_message = acct.sign_message(message)
 
@@ -40,6 +40,5 @@ if __name__ == '__main__':
         print("You passed the challenge!")
     else:
         print("You failed the challenge!")
-
 
 
