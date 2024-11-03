@@ -32,6 +32,8 @@ tx = contract.functions.claim(user_address, nonce).buildTransaction({
     'gas': 2000000,
     'gasPrice': w3.toWei('30', 'gwei')  # 提高 gasPrice 至 30 Gwei
 })
+balance = w3.eth.get_balance(account.address)
+print("账户余额:", w3.fromWei(balance, 'ether'), "AVAX")
 
 
 # 签署并发送交易
