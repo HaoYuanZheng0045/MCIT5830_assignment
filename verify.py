@@ -12,8 +12,8 @@ def signChallenge(challenge):
     if not isinstance(challenge, bytes):
         challenge = bytes(str(challenge), 'utf-8')
 
-    # 将 challenge 转换为十六进制字符串格式用于 encode_defunct
-    message = encode_defunct(hexstr=challenge.hex())
+    # 使用原始字节创建消息
+    message = encode_defunct(challenge)
     signed_message = acct.sign_message(message)
 
     # 返回地址和签名
@@ -25,7 +25,7 @@ def verifySig():
     """
     # 生成32字节的随机挑战
     challenge_bytes = os.urandom(32)
-    challenge = encode_defunct(hexstr=challenge_bytes.hex())
+    challenge = encode_defunct(challenge_bytes)
 
     # 使用 signChallenge 函数签名消息
     address, sig = signChallenge(challenge_bytes)
