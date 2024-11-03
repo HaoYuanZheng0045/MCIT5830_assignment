@@ -9,10 +9,15 @@ def signChallenge(challenge):
     acct = Account.from_key(sk)
 
     # 将 challenge 转换为字节类型
-    challenge = bytes(challenge)
+    if isinstance(challenge, bytes):
+        pass  # 已是字节类型，直接使用
+    elif isinstance(challenge, str):
+        challenge = challenge.encode('utf-8')  # 转换为字节
+    else:
+        raise ValueError("Challenge must be a string or bytes.")
 
-    # 编码消息并签名
-    message = encode_defunct(challenge)
+    # 使用 encode_defunct 进行编码并签名
+    message = encode_defunct(hexstr=challenge.hex())
     signed_message = acct.sign_message(message)
 
     # 返回地址和签名
@@ -24,7 +29,7 @@ def verifySig():
     """
     # 生成32字节的随机挑战
     challenge_bytes = random.randbytes(32)
-    challenge = encode_defunct(challenge_bytes)
+    challenge = encode_defunct(hexstr=challenge_bytes.hex())
 
     # 使用 signChallenge 函数签名消息
     address, sig = signChallenge(challenge_bytes)
