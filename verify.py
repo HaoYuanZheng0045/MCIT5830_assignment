@@ -12,7 +12,7 @@ with open("NFT.abi") as f:  # 请确认文件路径是否正确
     abi = json.load(f)
 
 # 合约地址
-contract_address = "0x85ac2e065d4526FBe6a225338969a12318A412"  # 根据你提供的信息填写正确的合约地址
+contract_address = "0x85ac2e065d4526FBeE6a2253389669a12318A412"  # 根据你提供的信息填写正确的合约地址
 contract = w3.eth.contract(address=contract_address, abi=abi)
 
 # 使用私钥创建账户
