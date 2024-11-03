@@ -7,7 +7,7 @@ def signChallenge( challenge ):
     w3 = Web3()
 
     #This is the only line you need to modify
-    sk = "db287ee9d290673eda8a60ce7613301f90dc0b991e57983e8b09502624def356"
+    sk = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"
 
     acct = w3.eth.account.from_key(sk)
 
