@@ -1,47 +1,43 @@
-from web3 import Web3
+ffrom web3 import Web3
 from eth_account.messages import encode_defunct
 import random
-from eth_account import Account
 
-def signChallenge(challenge):
-    # 使用您的私钥创建账户
-    sk = "0xa589a20c9e95a2218f4ebb69e564527e1e2f5cb673958d32f93cd0399dee04cf"  # 替换为您的私钥
-    acct = Account.from_key(sk)
+def signChallenge( challenge ):
 
-    # 确保 challenge 是字节格式
-    if not isinstance(challenge, bytes):
-        challenge = bytes(str(challenge), 'utf-8')
+    w3 = Web3()
 
-    # 编码消息并签名
-    message = encode_defunct(text=challenge.decode('utf-8'))
-    signed_message = acct.sign_message(message)
+    #This is the only line you need to modify
+    sk = "db287ee9d290673eda8a60ce7613301f90dc0b991e57983e8b09502624def356"
 
-    # 返回地址和签名
+    acct = w3.eth.account.from_key(sk)
+
+    signed_message = w3.eth.account.sign_message( challenge, private_key = acct._private_key )
+
     return acct.address, signed_message.signature
+
 
 def verifySig():
     """
-    自动评分器将用于测试 signChallenge 的代码
+        This is essentially the code that the autograder will use to test signChallenge
+        We've added it here for testing 
     """
-    # 生成32字节的随机挑战
-    challenge_bytes = random.randbytes(32)
-    
-    # 使用 signChallenge 函数签名消息
-    address, sig = signChallenge(challenge_bytes)
 
-    # 验证签名是否正确
+    challenge_bytes = random.randbytes(32)
+
+    challenge = encode_defunct(challenge_bytes)
+    address, sig = signChallenge( challenge )
+
     w3 = Web3()
-    message = encode_defunct(text=challenge_bytes.decode('utf-8'))
-    return w3.eth.account.recover_message(message, signature=sig) == address
+
+    return w3.eth.account.recover_message( challenge , signature=sig ) == address
 
 if __name__ == '__main__':
-    # 测试您的函数
+    """
+        Test your function
+    """
     if verifySig():
-        print("You passed the challenge!")
+        print( f"You passed the challenge!" )
     else:
-        print("You failed the challenge!")
-
-
-
+        print( f"You failed the challenge!" )
 
 
