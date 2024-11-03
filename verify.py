@@ -23,6 +23,7 @@ account = Account.from_key(private_key)
 # 定义地址和nonce（nonce应该是一个32字节的数据）
 user_address = account.address
 nonce = os.urandom(32)  # 生成一个随机的32字节的nonce
+print("Account Address:", user_address)
 
 # 调用claim函数
 tx = contract.functions.claim(user_address, nonce).buildTransaction({
