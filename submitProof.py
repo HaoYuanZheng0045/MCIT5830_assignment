@@ -39,10 +39,6 @@ def merkle_assignment():
 
 
 def generate_primes(num_primes):
-    """
-        Function to generate the first 'num_primes' prime numbers
-        returns list (with length n) of primes (as ints) in ascending order
-    """
     primes_list = []
     candidate = 2
     while len(primes_list) < num_primes:
@@ -54,21 +50,11 @@ def generate_primes(num_primes):
 
 
 def convert_leaves(primes_list):
-    """
-        Converts the leaves (primes_list) to bytes32 format
-        returns list of primes where list entries are bytes32 encodings of primes_list entries
-    """
     leaves = [int.to_bytes(prime, 32, 'big') for prime in primes_list]
     return leaves
 
 
 def build_merkle(leaves):
-    """
-        Function to build a Merkle Tree from the list of prime numbers in bytes32 format
-        Returns the Merkle tree (tree) as a list where tree[0] is the list of leaves,
-        tree[1] is the parent hashes, and so on until tree[n] which is the root hash
-        the root hash produced by the "hash_pair" helper function
-    """
     tree = [leaves]
     current_level = leaves
     while len(current_level) > 1:
@@ -84,12 +70,6 @@ def build_merkle(leaves):
 
 
 def prove_merkle(merkle_tree, random_indx):
-    """
-        Takes a random_index to create a proof of inclusion for and a complete Merkle tree
-        as a list of lists where index 0 is the list of leaves, index 1 is the list of
-        parent hash values, up to index -1 which is the list of the root hash.
-        returns a proof of inclusion as list of values
-    """
     proof = []
     index = random_indx
     for level in merkle_tree[:-1]:  # Skip root level
@@ -101,13 +81,6 @@ def prove_merkle(merkle_tree, random_indx):
 
 
 def sign_challenge(challenge):
-    """
-        Takes a challenge (string)
-        Returns address, sig
-        where address is an ethereum address and sig is a signature (in hex)
-        This method is to allow the auto-grader to verify that you have
-        claimed a prime
-    """
     acct = get_account()
     eth_encoded_msg = eth_account.messages.encode_defunct(text=challenge)
     signature = acct.sign_message(eth_encoded_msg)
@@ -115,11 +88,6 @@ def sign_challenge(challenge):
 
 
 def send_signed_msg(proof, random_leaf):
-    """
-        Takes a Merkle proof of a leaf, and that leaf (in bytes32 format)
-        builds signs and sends a transaction claiming that leaf (prime)
-        on the contract
-    """
     chain = 'bsc'
     acct = get_account()
     address, abi = get_contract_info(chain)
@@ -140,10 +108,6 @@ def send_signed_msg(proof, random_leaf):
 
 # Helper functions that do not need to be modified
 def connect_to(chain):
-    """
-        Takes a chain ('avax' or 'bsc') and returns a web3 instance
-        connected to that chain.
-    """
     if chain not in ['avax', 'bsc']:
         print(f"{chain} is not a valid option for 'connect_to()'")
         return None
@@ -157,10 +121,6 @@ def connect_to(chain):
 
 
 def get_account():
-    """
-        Returns an account object recovered from the secret key
-        in "sk.txt"
-    """
     cur_dir = Path(__file__).parent.absolute()
     with open(cur_dir.joinpath('sk.txt'), 'r') as f:
         sk = f.readline().rstrip()
@@ -170,10 +130,6 @@ def get_account():
 
 
 def get_contract_info(chain):
-    """
-        Returns a contract address and contract abi from "contract_info.json"
-        for the given chain
-    """
     cur_dir = Path(__file__).parent.absolute()
     with open(cur_dir.joinpath("contract_info.json"), "r") as f:
         d = json.load(f)
@@ -182,10 +138,6 @@ def get_contract_info(chain):
 
 
 def sign_challenge_verify(challenge, addr, sig):
-    """
-        Helper to verify signatures, verifies sign_challenge(challenge)
-        the same way the grader will. No changes are needed for this method
-    """
     eth_encoded_msg = eth_account.messages.encode_defunct(text=challenge)
 
     if eth_account.Account.recover_message(eth_encoded_msg, signature=sig) == addr:
@@ -198,11 +150,6 @@ def sign_challenge_verify(challenge, addr, sig):
 
 
 def hash_pair(a, b):
-    """
-        The OpenZeppelin Merkle Tree Validator we use sorts the leaves
-        https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/MerkleProof.sol#L217
-        So you must sort the leaves as well
-    """
     if a < b:
         return Web3.solidity_keccak(['bytes32', 'bytes32'], [a, b])
     else:
@@ -212,8 +159,5 @@ def hash_pair(a, b):
 if __name__ == "__main__":
     merkle_assignment()
 
-from eth_account import Account
-new_account = Account.create()
-print("Address:", new_account.address)
-print("Private Key:", new_account.key.hex())
+
 
