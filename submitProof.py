@@ -25,7 +25,7 @@ def merkle_assignment():
     tree = build_merkle(leaves)
 
     # Select a random leaf and create a proof for that leaf
-    random_leaf_index = 0 #TODO generate a random index from primes to claim (0 is already claimed)
+    random_leaf_index = random.randint(1, len(primes) - 1)  # Select a random unclaimed leaf index
     proof = prove_merkle(tree, random_leaf_index)
 
     # This is the same way the grader generates a challenge for sign_challenge()
@@ -34,10 +34,8 @@ def merkle_assignment():
     addr, sig = sign_challenge(challenge)
 
     if sign_challenge_verify(challenge, addr, sig):
-        tx_hash = '0x'
-        # TODO, when you are ready to attempt to claim a prime (and pay gas fees),
-        #  complete this method and run your code with the following line un-commented
-        # tx_hash = send_signed_msg(proof, leaves[random_leaf_index])
+        tx_hash = send_signed_msg(proof, leaves[random_leaf_index])
+        print(f"Transaction hash: {tx_hash}")
 
 
 def generate_primes(num_primes):
@@ -46,9 +44,12 @@ def generate_primes(num_primes):
         returns list (with length n) of primes (as ints) in ascending order
     """
     primes_list = []
-
-    #TODO YOUR CODE HERE
-
+    candidate = 2
+    while len(primes_list) < num_primes:
+        is_prime = all(candidate % p != 0 for p in primes_list)
+        if is_prime:
+            primes_list.append(candidate)
+        candidate += 1
     return primes_list
 
 
@@ -57,10 +58,8 @@ def convert_leaves(primes_list):
         Converts the leaves (primes_list) to bytes32 format
         returns list of primes where list entries are bytes32 encodings of primes_list entries
     """
-
-    # TODO YOUR CODE HERE
-
-    return []
+    leaves = [int.to_bytes(prime, 32, 'big') for prime in primes_list]
+    return leaves
 
 
 def build_merkle(leaves):
@@ -70,10 +69,17 @@ def build_merkle(leaves):
         tree[1] is the parent hashes, and so on until tree[n] which is the root hash
         the root hash produced by the "hash_pair" helper function
     """
-
-    #TODO YOUR CODE HERE
-    tree = []
-
+    tree = [leaves]
+    current_level = leaves
+    while len(current_level) > 1:
+        next_level = []
+        for i in range(0, len(current_level), 2):
+            left = current_level[i]
+            right = current_level[i + 1] if i + 1 < len(current_level) else left
+            parent_hash = hash_pair(left, right)
+            next_level.append(parent_hash)
+        tree.append(next_level)
+        current_level = next_level
     return tree
 
 
@@ -84,10 +90,14 @@ def prove_merkle(merkle_tree, random_indx):
         parent hash values, up to index -1 which is the list of the root hash.
         returns a proof of inclusion as list of values
     """
-    merkle_proof = []
-    # TODO YOUR CODE HERE
-
-    return merkle_proof
+    proof = []
+    index = random_indx
+    for level in merkle_tree[:-1]:  # Skip root level
+        pair_index = index ^ 1  # Get sibling index
+        if pair_index < len(level):
+            proof.append(level[pair_index])
+        index //= 2  # Move to the next level
+    return proof
 
 
 def sign_challenge(challenge):
@@ -99,14 +109,9 @@ def sign_challenge(challenge):
         claimed a prime
     """
     acct = get_account()
-
-    addr = acct.address
-    eth_sk = acct.key
-
-    # TODO YOUR CODE HERE
-    eth_sig_obj = 'placeholder'
-
-    return addr, eth_sig_obj.signature.hex()
+    eth_encoded_msg = eth_account.messages.encode_defunct(text=challenge)
+    signature = acct.sign_message(eth_encoded_msg)
+    return acct.address, signature.signature.hex()
 
 
 def send_signed_msg(proof, random_leaf):
@@ -116,15 +121,21 @@ def send_signed_msg(proof, random_leaf):
         on the contract
     """
     chain = 'bsc'
-
     acct = get_account()
     address, abi = get_contract_info(chain)
     w3 = connect_to(chain)
-
-    # TODO YOUR CODE HERE
-    tx_hash = 'placeholder'
-
-    return tx_hash
+    contract = w3.eth.contract(address=address, abi=abi)
+    
+    tx = contract.functions.submit(proof, random_leaf).buildTransaction({
+        'from': acct.address,
+        'nonce': w3.eth.getTransactionCount(acct.address),
+        'gas': 300000,
+        'gasPrice': w3.toWei('20', 'gwei')
+    })
+    
+    signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+    return tx_hash.hex()
 
 
 # Helper functions that do not need to be modified
@@ -133,7 +144,7 @@ def connect_to(chain):
         Takes a chain ('avax' or 'bsc') and returns a web3 instance
         connected to that chain.
     """
-    if chain not in ['avax','bsc']:
+    if chain not in ['avax', 'bsc']:
         print(f"{chain} is not a valid option for 'connect_to()'")
         return None
     if chain == 'avax':
@@ -141,9 +152,7 @@ def connect_to(chain):
     else:
         api_url = f"https://data-seed-prebsc-1-s1.binance.org:8545/"  # BSC testnet
     w3 = Web3(Web3.HTTPProvider(api_url))
-    # inject the poa compatibility middleware to the innermost layer
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-
     return w3
 
 
@@ -193,11 +202,6 @@ def hash_pair(a, b):
         The OpenZeppelin Merkle Tree Validator we use sorts the leaves
         https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/MerkleProof.sol#L217
         So you must sort the leaves as well
-
-        Also, hash functions like keccak are very sensitive to input encoding, so the solidity_keccak function is the function to use
-
-        Another potential gotcha, if you have a prime number (as an int) bytes(prime) will *not* give you the byte representation of the integer prime
-        Instead, you must call int.to_bytes(prime,'big').
     """
     if a < b:
         return Web3.solidity_keccak(['bytes32', 'bytes32'], [a, b])
