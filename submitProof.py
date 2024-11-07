@@ -103,7 +103,7 @@ def send_signed_msg(proof, random_leaf):
     tx = contract.functions.submit(proof, random_leaf).transact({
         'from': acct.address,
         'gas': 300000,
-        'gasPrice': w3.toWei('20', 'gwei')
+        'gasPrice': Web3.toWei('20', 'gwei')
     })
     
     tx_hash = w3.toHex(tx)
@@ -162,6 +162,9 @@ def hash_pair(a, b):
 
 if __name__ == "__main__":
     merkle_assignment()
+
+
+
 
 
 
