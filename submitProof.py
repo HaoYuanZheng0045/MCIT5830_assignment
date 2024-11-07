@@ -211,3 +211,9 @@ def hash_pair(a, b):
 
 if __name__ == "__main__":
     merkle_assignment()
+
+from eth_account import Account
+new_account = Account.create()
+print("Address:", new_account.address)
+print("Private Key:", new_account.key.hex())
+
