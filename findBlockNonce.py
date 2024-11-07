@@ -18,10 +18,22 @@ def mine_block(k, prev_hash, rand_lines):
         print("mine_block expects positive integer")
         return b'\x00'
 
-    # TODO your code to find a nonce here
+    # Target suffix of '0' * k in binary format
+    target_suffix = '0' * k
+    nonce = 0
 
-    assert isinstance(nonce, bytes), 'nonce should be of type bytes'
-    return nonce
+    while True:
+        # Convert nonce to bytes and prepare data for hashing
+        nonce_bytes = str(nonce).encode()
+        combined_data = prev_hash + ''.join(rand_lines).encode() + nonce_bytes
+        hash_result = hashlib.sha256(combined_data).hexdigest()
+
+        # Convert hash result to binary and check if it ends with k zeros
+        binary_hash = bin(int(hash_result, 16))[2:]  # Convert to binary
+        if binary_hash.endswith(target_suffix):
+            return nonce_bytes
+        
+        nonce += 1  # Increment nonce if condition is not met
 
 
 def get_random_lines(filename, quantity):
@@ -52,5 +64,6 @@ if __name__ == '__main__':
     diff = 20
 
     rand_lines = get_random_lines(filename, num_lines)
-    nonce = mine_block(diff, rand_lines)
+    prev_hash = b'\x00' * 32  # You might need an actual previous hash in real testing
+    nonce = mine_block(diff, prev_hash, rand_lines)
     print(nonce)
