@@ -25,7 +25,7 @@ def merkle_assignment():
     tree = build_merkle(leaves)
 
     # Select a random leaf and create a proof for that leaf
-    random_leaf_index = 0 #TODO generate a random index from primes to claim (0 is already claimed)
+    random_leaf_index = 0  # TODO: generate a random index from primes to claim (0 is already claimed)
     proof = prove_merkle(tree, random_leaf_index)
 
     # This is the same way the grader generates a challenge for sign_challenge()
@@ -48,10 +48,14 @@ def generate_primes(num_primes):
     primes_list = []
     candidate = 2
     while len(primes_list) < num_primes:
+        is_prime = True
         for p in primes_list:
-            if candidate % p == 0:
+            if p * p > candidate:
                 break
-        else:
+            if candidate % p == 0:
+                is_prime = False
+                break
+        if is_prime:
             primes_list.append(candidate)
         candidate += 1
     return primes_list
@@ -62,7 +66,7 @@ def convert_leaves(primes_list):
         Converts the leaves (primes_list) to bytes32 format
         returns list of primes where list entries are bytes32 encodings of primes_list entries
     """
-    return [Web3.toBytes(int=prime).rjust(32, b'\0') for prime in primes_list]
+    return [int(prime).to_bytes(32, byteorder='big') for prime in primes_list]
 
 
 def build_merkle(leaves):
@@ -72,7 +76,7 @@ def build_merkle(leaves):
         tree[1] is the parent hashes, and so on until tree[n] which is the root hash
         the root hash produced by the "hash_pair" helper function
     """
-    tree = [leaves]  # Level 0 contains the leaves
+    tree = [leaves]  # Start with the initial leaves level
     current_level = leaves
     
     while len(current_level) > 1:
@@ -155,7 +159,7 @@ def connect_to(chain):
         Takes a chain ('avax' or 'bsc') and returns a web3 instance
         connected to that chain.
     """
-    if chain not in ['avax','bsc']:
+    if chain not in ['avax', 'bsc']:
         print(f"{chain} is not a valid option for 'connect_to()'")
         return None
     if chain == 'avax':
@@ -229,6 +233,7 @@ def hash_pair(a, b):
 
 if __name__ == "__main__":
     merkle_assignment()
+
 
 
 
