@@ -41,21 +41,20 @@ def merkle_assignment():
 
 
 def generate_primes(num_primes):
-    """
-        Function to generate the first 'num_primes' prime numbers
-        returns list (with length n) of primes (as ints) in ascending order
-    """
     primes_list = []
-    candidate = 2
-    is_prime = [True] * (num_primes * 10)  # A larger limit for candidate primes
-    for candidate in range(2, len(is_prime)):
+    limit = num_primes * 15  # 设置一个较大的上限以确保候选质数范围足够大
+    is_prime = [True] * (limit + 1)
+    
+    # 埃拉托斯特尼筛法
+    for candidate in range(2, limit + 1):
         if is_prime[candidate]:
             primes_list.append(candidate)
             if len(primes_list) == num_primes:
                 break
-            for multiple in range(candidate * candidate, len(is_prime), candidate):
+            for multiple in range(candidate * candidate, limit + 1, candidate):
                 is_prime[multiple] = False
     return primes_list
+
 
 
 def convert_leaves(primes_list):
