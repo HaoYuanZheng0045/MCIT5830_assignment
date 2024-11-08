@@ -72,33 +72,27 @@ def sign_challenge(challenge):
 
 
 def send_signed_msg(proof, random_leaf):
-    """
-        Takes a Merkle proof of a leaf, and that leaf (in bytes32 format)
-        builds signs and sends a transaction claiming that leaf (prime)
-        on the contract
-    """
     chain = 'bsc'
-
     acct = get_account()
     address, abi = get_contract_info(chain)
     w3 = connect_to(chain)
     contract = w3.eth.contract(address=address, abi=abi)
 
-    # 构建未签名的交易
+    # Convert random_leaf to bytes32 format
+    random_leaf = int.to_bytes(random_leaf, 32, 'big')
+
+    # Build transaction
     tx = contract.functions.submit(proof, random_leaf).buildTransaction({
         'from': acct.address,
         'nonce': w3.eth.getTransactionCount(acct.address),
         'gas': 300000,
-        'gasPrice': 20 * (10 ** 9)  # 手动设置为20 Gwei
+        'gasPrice': w3.toWei(20, 'gwei')
     })
 
-    # 对交易进行签名
+    # Sign and send the transaction
     signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
-
-    # 发送签名的交易
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     return tx_hash.hex()
-
 
 
 # Helper functions that do not need to be modified
@@ -134,7 +128,6 @@ def get_contract_info(chain):
 
 def sign_challenge_verify(challenge, addr, sig):
     eth_encoded_msg = eth_account.messages.encode_defunct(text=challenge)
-
     if eth_account.Account.recover_message(eth_encoded_msg, signature=sig) == addr:
         print(f"Success: signed the challenge {challenge} using address {addr}!")
         return True
@@ -153,6 +146,7 @@ def hash_pair(a, b):
 
 if __name__ == "__main__":
     merkle_assignment()
+
 
 
 
