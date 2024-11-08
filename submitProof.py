@@ -47,17 +47,14 @@ def generate_primes(num_primes):
     """
     primes_list = []
     candidate = 2
-    while len(primes_list) < num_primes:
-        is_prime = True
-        for p in primes_list:
-            if p * p > candidate:
-                break
-            if candidate % p == 0:
-                is_prime = False
-                break
-        if is_prime:
+    is_prime = [True] * (num_primes * 10)  # A larger limit for candidate primes
+    for candidate in range(2, len(is_prime)):
+        if is_prime[candidate]:
             primes_list.append(candidate)
-        candidate += 1
+            if len(primes_list) == num_primes:
+                break
+            for multiple in range(candidate * candidate, len(is_prime), candidate):
+                is_prime[multiple] = False
     return primes_list
 
 
@@ -156,7 +153,7 @@ def send_signed_msg(proof, random_leaf):
 # Helper functions that do not need to be modified
 def connect_to(chain):
     """
-        Takes a chain ('avax' or 'bsc') and returns a web3 instance
+        Takes a chain ('avax', 'bsc') and returns a web3 instance
         connected to that chain.
     """
     if chain not in ['avax', 'bsc']:
@@ -228,11 +225,7 @@ def hash_pair(a, b):
     if a < b:
         return Web3.solidity_keccak(['bytes32', 'bytes32'], [a, b])
     else:
-        return Web3.solidity_keccak(['bytes32', 'bytes32'], [b, a])
-
-
-if __name__ == "__main__":
-    merkle_assignment()
+        return Web3.solidity_keccak(['bytes32', 'bytes32
 
 
 
