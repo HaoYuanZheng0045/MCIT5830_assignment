@@ -86,7 +86,7 @@ def send_signed_msg(proof, random_leaf):
     print(contract.functions.submit)  # 添加这行代码来查看 submit 的信息
 
     # 构建并发送交易
-    tx = contract.functions.submit(proof, random_leaf).buildTransaction({
+    tx = contract.functions.submit(proof, random_leaf).transact({
         'from': acct.address,
         'nonce': w3.eth.get_transaction_count(acct.address),
         'gas': 300000,
