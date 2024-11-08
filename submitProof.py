@@ -225,7 +225,11 @@ def hash_pair(a, b):
     if a < b:
         return Web3.solidity_keccak(['bytes32', 'bytes32'], [a, b])
     else:
-        return Web3.solidity_keccak(['bytes32', 'bytes32
+        return Web3.solidity_keccak(['bytes32', 'bytes32'], [b, a])
+
+
+if __name__ == "__main__":
+    merkle_assignment()
 
 
 
