@@ -8,29 +8,13 @@ from web3.middleware import geth_poa_middleware  # Necessary for POA chains
 
 
 def merkle_assignment():
-    """
-        The only modifications you need to make to this method are to assign
-        your "random_leaf_index" and uncomment the last line when you are
-        ready to attempt to claim a prime. You will need to complete the
-        methods called by this method to generate the proof.
-    """
-    # Generate the list of primes as integers
     num_of_primes = 8192
     primes = generate_primes(num_of_primes)
-
-    # Create a version of the list of primes in bytes32 format
     leaves = convert_leaves(primes)
-
-    # Build a Merkle tree using the bytes32 leaves as the Merkle tree's leaves
     tree = build_merkle(leaves)
-
-    # Select a random leaf and create a proof for that leaf
-    random_leaf_index = random.randint(1, len(primes) - 1)  # Select a random unclaimed leaf index
+    random_leaf_index = random.randint(1, len(primes) - 1)
     proof = prove_merkle(tree, random_leaf_index)
-
-    # This is the same way the grader generates a challenge for sign_challenge()
     challenge = ''.join(random.choice(string.ascii_letters) for i in range(32))
-    # Sign the challenge to prove to the grader you hold the account
     addr, sig = sign_challenge(challenge)
 
     if sign_challenge_verify(challenge, addr, sig):
@@ -88,22 +72,17 @@ def sign_challenge(challenge):
 
 
 def send_signed_msg(proof, random_leaf):
-    """
-        Takes a Merkle proof of a leaf, and that leaf (in bytes32 format)
-        builds signs and sends a transaction claiming that leaf (prime)
-        on the contract
-    """
     chain = 'bsc'
     acct = get_account()
     address, abi = get_contract_info(chain)
     w3 = connect_to(chain)
     contract = w3.eth.contract(address=address, abi=abi)
     
-    # Attempt to use .transact instead of .buildTransaction
+    # 使用手动设置的 gasPrice
     tx = contract.functions.submit(proof, random_leaf).transact({
         'from': acct.address,
         'gas': 300000,
-        'gasPrice': Web3.toWei('20', 'gwei')
+        'gasPrice': 20 * (10 ** 9)  # 20 Gwei 转换为 Wei
     })
     
     tx_hash = w3.toHex(tx)
@@ -162,6 +141,7 @@ def hash_pair(a, b):
 
 if __name__ == "__main__":
     merkle_assignment()
+
 
 
 
