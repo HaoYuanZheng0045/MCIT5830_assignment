@@ -42,18 +42,15 @@ def merkle_assignment():
 
 def generate_primes(num_primes):
     primes_list = []
-    limit = num_primes * 15  # 设置一个较大的上限以确保候选质数范围足够大
-    is_prime = [True] * (limit + 1)
-    
-    # 埃拉托斯特尼筛法
-    for candidate in range(2, limit + 1):
-        if is_prime[candidate]:
+    candidate = 2
+    while len(primes_list) < num_primes:
+        # 判断 candidate 是否是质数
+        is_prime = all(candidate % p != 0 for p in primes_list)
+        if is_prime:
             primes_list.append(candidate)
-            if len(primes_list) == num_primes:
-                break
-            for multiple in range(candidate * candidate, limit + 1, candidate):
-                is_prime[multiple] = False
+        candidate += 1
     return primes_list
+
 
 
 
