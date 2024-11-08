@@ -82,6 +82,9 @@ def send_signed_msg(proof, random_leaf):
     if isinstance(random_leaf, int):
         random_leaf = random_leaf.to_bytes(32, 'big')
 
+    # 调试：检查 submit 函数的属性
+    print(contract.functions.submit)  # 添加这行代码来查看 submit 的信息
+
     # 构建并发送交易
     tx = contract.functions.submit(proof, random_leaf).buildTransaction({
         'from': acct.address,
@@ -93,6 +96,7 @@ def send_signed_msg(proof, random_leaf):
     signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     return tx_hash.hex()
+
 
 
 # Helper functions that do not need to be modified
@@ -146,7 +150,7 @@ def hash_pair(a, b):
 
 if __name__ == "__main__":
     merkle_assignment()
-print(contract.functions.submit)
+
 
 
 
