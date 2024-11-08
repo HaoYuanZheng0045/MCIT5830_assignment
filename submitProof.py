@@ -88,12 +88,13 @@ def send_signed_msg(proof, random_leaf):
         random_leaf = random_leaf.to_bytes(32, 'big')
 
     # 构建并发送交易
-    tx = contract.functions.submit(proof, random_leaf).transact({
-        'from': acct.address,
-        'nonce': w3.eth.getTransactionCount(acct.address),
-        'gas': 300000,
-        'gasPrice': w3.toWei(20, 'gwei')
-    })
+   tx = contract.functions.submit(proof, random_leaf).transact({
+    'from': acct.address,
+    'nonce': w3.eth.get_transaction_count(acct.address),
+    'gas': 300000,
+    'gasPrice': w3.toWei(20, 'gwei')
+})
+
 
     return tx.hex()
 
