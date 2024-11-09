@@ -90,7 +90,7 @@ def send_signed_msg(proof, random_leaf):
         'from': acct.address,
         'nonce': w3.eth.get_transaction_count(acct.address),
         'gas': 300000,
-        'gasPrice': w3.toWei(20, 'gwei')
+        'gasPrice': Web3.to_wei(20, 'gwei')
     })
 
     signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
