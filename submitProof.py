@@ -132,9 +132,9 @@ def send_signed_msg(w3, contract, proof, random_leaf):
             'from': acct.address,
             'nonce': w3.eth.get_transaction_count(acct.address),
             'gas': 3000000,
-            'gas_price': w3.to_wei('10', 'gwei'),
-            'chain_id': 97,
-            'type': 0
+            'maxFeePerGas': w3.to_wei('100', 'gwei'),
+            'maxPriorityFeePerGas': w3.to_wei('2', 'gwei'),
+            'chainId': 97
         })
         print(f"Transaction dict: {tx}")
     except Exception as e:
@@ -165,6 +165,7 @@ def send_signed_msg(w3, contract, proof, random_leaf):
         print(f"Error waiting for transaction receipt: {e}")
 
     return tx_hash.hex()
+
 
 def connect_to(chain):
     if chain not in ['avax', 'bsc']:
