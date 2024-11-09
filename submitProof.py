@@ -78,24 +78,25 @@ def send_signed_msg(proof, random_leaf):
     w3 = connect_to(chain)
     contract = w3.eth.contract(address=address, abi=abi)
 
-    # 检查 random_leaf 是否为整数并仅在需要时转换
+    # Convert random_leaf to bytes if necessary
     if isinstance(random_leaf, int):
         random_leaf = random_leaf.to_bytes(32, 'big')
 
-    # 调试：检查 submit 函数的属性
-    print(contract.functions.submit)  # 添加这行代码来查看 submit 的信息
-
-    # 构建并发送交易
-    tx = contract.functions.submit(proof, random_leaf).transact({
+    # Build the transaction
+    tx = contract.functions.submit(proof, random_leaf).buildTransaction({
         'from': acct.address,
         'nonce': w3.eth.get_transaction_count(acct.address),
         'gas': 300000,
         'gasPrice': Web3.to_wei(20, 'gwei')
     })
 
+    # Sign the transaction locally
     signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
+
+    # Send the signed transaction
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     return tx_hash.hex()
+
 
 
 
