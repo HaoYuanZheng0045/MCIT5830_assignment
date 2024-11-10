@@ -131,9 +131,9 @@ def send_signed_msg(w3, contract, proof, random_leaf):
         tx = submit_func(proof, random_leaf).build_transaction({
             'from': acct.address,
             'nonce': w3.eth.get_transaction_count(acct.address),
-            'gas': 3000000,
-            'maxFeePerGas': w3.to_wei('100', 'gwei'),
-            'maxPriorityFeePerGas': w3.to_wei('2', 'gwei'),
+            'gas': 500000,
+            'maxFeePerGas': w3.to_wei('20', 'gwei'),
+            'maxPriorityFeePerGas': w3.to_wei('1', 'gwei'),
             'chainId': 97
         })
         print(f"Transaction dict: {tx}")
