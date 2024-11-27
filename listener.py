@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 import pandas as pd
 
-# Define the event log file
+# 定义文件路径
 eventfile = 'deposit_logs.csv'
 
 def scanBlocks(chain, start_block, end_block, contract_address):
@@ -56,6 +56,7 @@ def scanBlocks(chain, start_block, end_block, contract_address):
 
     # If block range is small, get events in bulk
     if end_block - start_block < 30:
+        # Correctly create the event filter from the contract
         event_filter = contract.events.Deposit.createFilter(fromBlock=start_block, toBlock=end_block)
         events = event_filter.get_all_entries()
 
@@ -76,6 +77,7 @@ def scanBlocks(chain, start_block, end_block, contract_address):
     else:
         # If block range is large, scan block by block
         for block_num in range(start_block, end_block + 1):
+            # Correctly create the event filter from the contract
             event_filter = contract.events.Deposit.createFilter(fromBlock=block_num, toBlock=block_num)
             events = event_filter.get_all_entries()
 
@@ -99,3 +101,4 @@ def scanBlocks(chain, start_block, end_block, contract_address):
     df.to_csv(eventfile, mode='a', header=not bool(pd.io.common.get_file_contents(eventfile)), index=False)
 
     print(f"Logs written to {eventfile}")
+
