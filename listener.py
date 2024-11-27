@@ -17,7 +17,7 @@ def scanBlocks(chain, start_block, end_block, contract_address):
     This function reads "Deposit" events from the specified contract, 
     and writes information about the events to the file "deposit_logs.csv"
     """
-    # Set RPC URL based on the chain type
+    # 设置 RPC URL 根据链的类型
     if chain == 'avax':
         api_url = "https://api.avax-test.network/ext/bc/C/rpc"  # AVAX C-chain testnet
     elif chain == 'bsc':
@@ -25,42 +25,42 @@ def scanBlocks(chain, start_block, end_block, contract_address):
     else:
         raise ValueError("Unsupported chain. Use 'avax' or 'bsc'.")
 
-    # Connect to the blockchain
+    # 连接到区块链
     w3 = Web3(Web3.HTTPProvider(api_url))
 
-    # Inject POA middleware if necessary (for Avalanche and BSC)
+    # 如果是 POA 链，注入中间件以处理兼容性
     if chain in ['avax', 'bsc']:
         w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-    # Deposit event ABI (simplified to include only the Deposit event)
+    # Deposit 事件的 ABI
     DEPOSIT_ABI = json.loads('[ { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "token", "type": "address" }, { "indexed": true, "internalType": "address", "name": "recipient", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "Deposit", "type": "event" }]')
 
-    # Create the contract instance
+    # 创建合约对象
     contract = w3.eth.contract(address=contract_address, abi=DEPOSIT_ABI)
 
-    # Handle 'latest' blocks
+    # 处理 'latest' 区块
     if start_block == "latest":
         start_block = w3.eth.get_block_number()
     if end_block == "latest":
         end_block = w3.eth.get_block_number()
 
-    # Ensure valid block range
+    # 确保区块范围合法
     if end_block < start_block:
         print(f"Error: end_block < start_block!")
         return
 
     print(f"Scanning blocks from {start_block} to {end_block} on {chain}")
 
-    # List to store event logs
+    # 存储事件日志的列表
     logs = []
 
-    # If block range is small, get events in bulk
+    # 如果区块范围较小，批量获取事件
     if end_block - start_block < 30:
-        # Correctly create the event filter from the contract
+        # 正确调用 createFilter，确保是从合约实例的事件对象调用
         event_filter = contract.events.Deposit.createFilter(fromBlock=start_block, toBlock=end_block)
         events = event_filter.get_all_entries()
 
-        # Process the events
+        # 处理事件
         for evt in events:
             token = evt.args['token']
             recipient = evt.args['recipient']
@@ -68,16 +68,16 @@ def scanBlocks(chain, start_block, end_block, contract_address):
             transaction_hash = evt.transactionHash.hex()
             contract_address = evt.address
 
-            # Get block timestamp and format it
+            # 获取区块时间戳并格式化
             timestamp = datetime.utcfromtimestamp(w3.eth.getBlock(evt.blockNumber)['timestamp'])
             formatted_time = timestamp.strftime('%m/%d/%Y %H:%M:%S')
 
             logs.append([chain, token, recipient, amount, transaction_hash, contract_address, formatted_time])
 
     else:
-        # If block range is large, scan block by block
+        # 如果区块范围较大，按区块逐一扫描
         for block_num in range(start_block, end_block + 1):
-            # Correctly create the event filter from the contract
+            # 正确调用 createFilter
             event_filter = contract.events.Deposit.createFilter(fromBlock=block_num, toBlock=block_num)
             events = event_filter.get_all_entries()
 
@@ -88,17 +88,18 @@ def scanBlocks(chain, start_block, end_block, contract_address):
                 transaction_hash = evt.transactionHash.hex()
                 contract_address = evt.address
 
-                # Get block timestamp and format it
+                # 获取区块时间戳并格式化
                 timestamp = datetime.utcfromtimestamp(w3.eth.getBlock(evt.blockNumber)['timestamp'])
                 formatted_time = timestamp.strftime('%m/%d/%Y %H:%M:%S')
 
                 logs.append([chain, token, recipient, amount, transaction_hash, contract_address, formatted_time])
 
-    # Write the data to a CSV file using pandas
+    # 使用 pandas 将数据写入 CSV 文件
     df = pd.DataFrame(logs, columns=['chain', 'token', 'recipient', 'amount', 'transactionHash', 'address', 'date'])
 
-    # Append data to CSV file (create the file if it doesn't exist)
+    # 将数据追加到 CSV 文件中，如果文件不存在则创建
     df.to_csv(eventfile, mode='a', header=not bool(pd.io.common.get_file_contents(eventfile)), index=False)
 
     print(f"Logs written to {eventfile}")
+
 
