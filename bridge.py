@@ -14,70 +14,122 @@ def connectTo(chain):
     else:
         raise ValueError("Unsupported chain")
 
-    w3 = Web3(Web3.HTTPProvider(api_url))
-    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    return w3
+    try:
+        w3 = Web3(Web3.HTTPProvider(api_url))
+        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        return w3
+    except Exception as e:
+        print(f"Failed to connect to {chain} RPC: {e}")
+        return None
 
 def getContractInfo(chain):
-    with open(contract_info_file, 'r') as f:
-        contracts = json.load(f)
-    return contracts[chain]
+    try:
+        with open(contract_info_file, 'r') as f:
+            contracts = json.load(f)
+        return contracts[chain]
+    except Exception as e:
+        print(f"Error loading contract info: {e}")
+        return None
 
-def scanBlocks():
-    # 初始化链连接
-    source_w3 = connectTo("avax")
-    dest_w3 = connectTo("bsc")
+def scanBlocks(chain):
+    """
+    Scan the last 5 blocks of the source and destination chains.
+    Look for 'Deposit' events on the source chain and 'Unwrap' events on the destination chain.
+    When Deposit events are found on the source chain, call the 'wrap' function on the destination chain.
+    When Unwrap events are found on the destination chain, call the 'withdraw' function on the source chain.
+    """
+    contracts = getContractInfo(chain)
+    if not contracts:
+        print(f"Failed to load contracts for {chain}")
+        return
 
-    # 加载合约
-    source_info = getContractInfo("source")
-    dest_info = getContractInfo("destination")
+    if chain == 'source':
+        other_chain = 'destination'
+    elif chain == 'destination':
+        other_chain = 'source'
+    else:
+        print(f"Invalid chain: {chain}")
+        return
 
-    source_contract = source_w3.eth.contract(
-        address=source_info["address"],
-        abi=source_info["abi"]
-    )
-    dest_contract = dest_w3.eth.contract(
-        address=dest_info["address"],
-        abi=dest_info["abi"]
-    )
+    # Connect to both chains
+    w3 = connectTo(chain)
+    other_w3 = connectTo(other_chain)
+    if not w3 or not other_w3:
+        return
 
-    # 获取最新区块范围
-    source_latest = source_w3.eth.block_number
-    dest_latest = dest_w3.eth.block_number
+    # Load contract details
+    contract_address = contracts['address']
+    contract_abi = contracts['abi']
+    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    # 扫描事件
-    # 1. 监听 Deposit 事件
-    deposit_events = source_contract.events.Deposit.createFilter(
-        fromBlock=max(0, source_latest - 5)
-    ).get_all_entries()
+    # Get the latest blocks to scan
+    end_block = w3.eth.get_block_number()
+    start_block = end_block - 5  # Scan the last 5 blocks
 
-    for event in deposit_events:
-        token = event.args.token
-        recipient = event.args.recipient
-        amount = event.args.amount
-        print(f"Deposit event detected: {token}, {recipient}, {amount}")
-        
-        # 调用目标链的 wrap() 函数
-        dest_contract.functions.wrap(token, recipient, amount).transact({
-            "from": dest_w3.eth.default_account
-        })
+    if chain == 'source':
+        # Listen for Deposit events
+        event_filter = contract.events.Deposit.create_filter(fromBlock=start_block, toBlock=end_block)
+        events = event_filter.get_all_entries()
 
-    # 2. 监听 Unwrap 事件
-    unwrap_events = dest_contract.events.Unwrap.createFilter(
-        fromBlock=max(0, dest_latest - 5)
-    ).get_all_entries()
+        if not events:
+            print("No Deposit events found.")
+            return
 
-    for event in unwrap_events:
-        token = event.args.underlying_token
-        recipient = event.args.to
-        amount = event.args.amount
-        print(f"Unwrap event detected: {token}, {recipient}, {amount}")
+        for evt in events:
+            print(f"Detected Deposit event: {evt}")
+            token = evt.args['token']
+            recipient = evt.args['recipient']
+            amount = evt.args['amount']
 
-        # 调用源链的 withdraw() 函数
-        source_contract.functions.withdraw(token, recipient, amount).transact({
-            "from": source_w3.eth.default_account
-        })
+            # Call wrap() on the destination contract
+            dest_contracts = getContractInfo('destination')
+            dest_contract = other_w3.eth.contract(address=dest_contracts['address'], abi=dest_contracts['abi'])
+            private_key = "0xdbd9d083e26ca8abdeb4f79e524f9ea862c2a718d2de48169b05ab3aac7a97c2"
+            sender_address = "0x433356818AeB914431E309F1D2890494B103fd63"
+            nonce = other_w3.eth.get_transaction_count(Web3.to_checksum_address(sender_address))
 
-if __name__ == "__main__":
-    scanBlocks()
+            tx = dest_contract.functions.wrap(token, recipient, amount).build_transaction({
+                'chainId': 97,  # BSC Testnet chain ID
+                'gas': 2000000,
+                'gasPrice': other_w3.eth.gas_price,
+                'nonce': nonce,
+            })
+
+            signed_tx = other_w3.eth.account.sign_transaction(tx, private_key=private_key)
+            tx_hash = other_w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            print(f"wrap() called on destination chain with tx hash: {tx_hash.hex()}")
+
+    elif chain == 'destination':
+        # Listen for Unwrap events
+        event_filter = contract.events.Unwrap.create_filter(fromBlock=start_block, toBlock=end_block)
+        events = event_filter.get_all_entries()
+
+        if not events:
+            print("No Unwrap events found.")
+            return
+
+        for evt in events:
+            print(f"Detected Unwrap event: {evt}")
+            token = evt.args['underlying_token']
+            recipient = evt.args['to']
+            amount = evt.args['amount']
+
+            # Call withdraw() on the source contract
+            source_contracts = getContractInfo('source')
+            source_contract = other_w3.eth.contract(address=source_contracts['address'], abi=source_contracts['abi'])
+            private_key = "0xdbd9d083e26ca8abdeb4f79e524f9ea862c2a718d2de48169b05ab3aac7a97c2"
+            sender_address = "0x433356818AeB914431E309F1D2890494B103fd63"
+            nonce = other_w3.eth.get_transaction_count(Web3.to_checksum_address(sender_address))
+
+            tx = source_contract.functions.withdraw(token, recipient, amount).build_transaction({
+                'chainId': 43113,  # Avalanche Fuji Testnet chain ID
+                'gas': 2000000,
+                'gasPrice': other_w3.eth.gas_price,
+                'nonce': nonce,
+            })
+
+            signed_tx = other_w3.eth.account.sign_transaction(tx, private_key=private_key)
+            tx_hash = other_w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            print(f"withdraw() called on source chain with tx hash: {tx_hash.hex()}")
+
 
