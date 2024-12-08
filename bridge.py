@@ -106,9 +106,51 @@ def withdrawOnSource(event):
     signed_txn = w3.eth.account.signTransaction(txn, private_key="your_private_key")
     w3.eth.sendRawTransaction(signed_txn.rawTransaction)
     print(f"Withdrew {event.args.amount} tokens on source chain")
+# 注册源链的ERC20代币
+def registerSourceToken():
+    w3 = connectTo("avax")
+    contract_info = getContractInfo("avax")
+    source_contract = w3.eth.contract(address=contract_info["source_contract_address"], abi=contract_info["source_contract_abi"])
+    
+    token_address = "0xc677c31AD31F73A5290f5ef067F8CEF8d301e45c"  # 这是源链代币的地址
+    txn = source_contract.functions.registerToken(token_address).buildTransaction({
+        'from': w3.eth.defaultAccount,
+        'gas': 2000000,
+        'gasPrice': w3.toWei('5', 'gwei'),
+        'nonce': w3.eth.getTransactionCount(w3.eth.defaultAccount),
+    })
+    
+    signed_txn = w3.eth.account.signTransaction(txn, private_key="your_private_key")
+    w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    print(f"Registered token {token_address} on source chain")
 
-# Main function that runs the bridge process and keeps listening
+# 注册目标链的ERC20代币
+def registerDestinationToken():
+    w3 = connectTo("bsc")
+    contract_info = getContractInfo("bsc")
+    destination_contract = w3.eth.contract(address=contract_info["destination_contract_address"], abi=contract_info["destination_contract_abi"])
+    
+    token_address = "0xc677c31AD31F73A5290f5ef067F8CEF8d301e45c"  # 这是目标链代币的地址
+    txn = destination_contract.functions.createToken(token_address).buildTransaction({
+        'from': w3.eth.defaultAccount,
+        'gas': 2000000,
+        'gasPrice': w3.toWei('5', 'gwei'),
+        'nonce': w3.eth.getTransactionCount(w3.eth.defaultAccount),
+    })
+    
+    signed_txn = w3.eth.account.signTransaction(txn, private_key="your_private_key")
+    w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    print(f"Created token {token_address} on destination chain")
+
+# 主函数：注册代币并调用桥接操作
 if __name__ == "__main__":
+    print("Registering token on source chain...")
+    registerSourceToken()  # 注册源链的代币
+    
+    print("Registering token on destination chain...")
+    registerDestinationToken()  # 注册目标链的代币
+    
+    # 你可以继续进行跨链操作
     while True:
         print("Scanning source chain for Deposit events...")
         scanBlocks("source")  # Listen for events on the source chain
@@ -118,6 +160,8 @@ if __name__ == "__main__":
         
         # Wait a bit before scanning again to avoid hitting rate limits
         time.sleep(10)
+
+
 
 
 
